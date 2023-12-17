@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>To-do List</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main>
+        <div id="input_div">
+            <h1>To do list</h1>
+            <div id="input_text_div">
+                <input id="input" type="text" placeholder="Enter task">
+                <button id="add_button">Add task</button>
+            </div>
+        </div>
+        <div id="tasks" >
+            <ul id="ul" ></ul>
+        </div>
+        <div id="clear_div">
+            <button id="clear_all_button">Clear all</button>
+        </div>
+    </main>
+
+    
+    <script>
+        window.addEventListener("load", function() {
+            let length = localStorage.length;
+            let tasks=[]
+            for (let index = 0; index < length; index++) {
+                let key = localStorage.key(index)
+                let value_array=GetValue(key)
+                value_array.push(key)
+                tasks.push(value_array)
+            }
+            tasks.sort(function (a,b){
+                return a[2]-b[2]
+            });
+            for (let index = 0; index < tasks.length; index++) {
+                createTask(tasks[index][0], tasks[index][1],tasks[index][3], tasks[index][2] )
+            }
+            if(length!=0){
+                let clear_all_button=document.getElementById("clear_all_button")
+                clear_all_button.style.visibility="visible"
+            }
+        });
+        
+        input.addEventListener("keypress", function(event) {
+                if (event.keyCode == 13) {
+                    input.blur()
+                    createTaskByInput()
+                }
+            });
+
+        add_button.onclick=()=>{
+            createTaskByInput();
+        }
+        clear_all_button.onclick=()=>{
+            
+            while(ul.firstChild){
+                ul.removeChild(ul.firstChild)
+                localStorage.clear();     
+                clear_all_button.style.visibility="hidden"
+            }
+        }
+        function createTaskByInput(){
+            if(document.getElementById("input").value!==''){
+                createTask(document.getElementById("input").value)
+                document.getElementById("input").value='';
+            }   
+            else{
+                alert("Write something")
+            }
+        }
+        function GetValue(id){
+            let valuesString=localStorage.getItem(id)
+            let values=valuesString.split("|");
+            return values;
+        }
+
+        function GetMaxValueNumber(){
+            let max=-1
+            for (let index = 0; index < localStorage.length; index++) {
+                let key = localStorage.key(index)
+                let value=Number(GetValue(key)[2])
+                if(max<value){
+                    max=value
+                } 
+            }
+            
+            return max;
+        }
+
+        function createTask(text_input_value, tick_value=false, Id=null, num=null){
+            let task_li=document.createElement("li")
+            let tick_button=document.createElement("button")
+            let tick_button_span=document.createElement("span")
+            let text_div=document.createElement("div")
+            let text_input=document.createElement("input")
+            text_input.type="text"
+            let delete_button=document.createElement("button")
+            let delete_button_span=document.createElement("span")
+
+            ul.appendChild(task_li)
+            task_li.append(tick_button, text_div,  delete_button)
+            tick_button.appendChild(tick_button_span)
+            text_div.appendChild(text_input)
+            
+            delete_button.appendChild(delete_button_span)
+
+            tick_button_span.textContent="\u2713"
+            delete_button_span.textContent="\u2715"
+            text_input.value=text_input_value
+
+            let clear_all_button=document.getElementById("clear_all_button")
+            clear_all_button.style.visibility="visible"
+
+            let id=undefined
+            let number=undefined
+            if(Id==null||num==null){
+                id=localStorage.length;
+                number=GetMaxValueNumber()+1;
+                let value=`${text_input.value}|${tick_value}|${number}`;
+                localStorage.setItem(id, value);
+            }
+            else{
+                id=Id
+                number=num;
+            }
+
+            if(tick_value==="true"){
+                task_li.style.cssText=`
+                    background: #888;
+                `
+                tick_button_span.style.color="#fff"
+                text_input.style.color="#fff"
+                delete_button_span.style.color="#fff"
+                text_input.style.textDecoration="line-through"
+                tick_button_span.style.visibility="visible"
+            }
+
+            
+
+            tick_button.onclick=()=>{
+                if(GetValue(id)[1] === "false"){
+                    task_li.style.cssText=`
+                        background: #888;
+                    `
+                    tick_button_span.style.color="#fff"
+                    text_input.style.color="#fff"
+                    delete_button_span.style.color="#fff"
+                    text_input.style.textDecoration="line-through"
+                    tick_button_span.style.visibility="visible"
+                    
+                    localStorage.setItem(id, `${text_input.value}|true|${number}`)
+                }
+                else{
+                    task_li.style.cssText=``
+                    tick_button_span.style.color="black"
+                    text_input.style.color="black"
+                    delete_button_span.style.color="black"
+                    text_input.style.textDecoration="none"
+                    tick_button_span.style.visibility="hidden"
+                    localStorage.setItem(id, `${text_input.value}|false|${number}`)
+                }
+            };
+
+            delete_button.onclick=()=>{
+                ul.removeChild(task_li)
+                localStorage.removeItem(id)
+                if(localStorage.length==0){
+                    let clear_all_button=document.getElementById("clear_all_button")
+                    clear_all_button.style.visibility="hidden"
+                }
+            }  
+            
+            text_input.addEventListener("change", function() {
+                let tick=GetValue(id)[1]
+                let number=GetValue(id)[2]
+                localStorage.setItem( id, `${text_input.value}|${tick}|${number}`)
+            });
+            
+            text_input.addEventListener("keypress", function(event) {
+                if (event.keyCode == 13) {
+                    text_input.blur()
+                }
+            });
+            
+        }
+        
+    </script>        
+    
+</body>
+</html>
